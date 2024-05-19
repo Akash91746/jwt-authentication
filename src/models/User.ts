@@ -4,8 +4,8 @@ import bcrypt from "bcrypt";
 
 export interface IUser extends Document {
     uid: string,
-    email?: string,
-    password?: string,
+    email: string,
+    password: string,
     emailVerified: boolean,
     confirmPassword?: string,
     passwordChangedAt: Date,
@@ -13,7 +13,6 @@ export interface IUser extends Document {
 
 interface IUserInstanceMethods {
     comparePassword(newPassword: string, encryptedPassword: string): Promise<boolean>;
-    changePasswordAfter(jwtIssuedAt: number): boolean;
 }
 
 export const userSchema = new mongoose.Schema<IUser, any, IUserInstanceMethods>({
@@ -86,16 +85,6 @@ userSchema.pre("save", async function (next) {
 
 userSchema.methods.comparePassword = function (newPassword, encryptedPassword) {
     return bcrypt.compare(newPassword, encryptedPassword);
-}
-
-userSchema.methods.changePasswordAfter = function (this: IUser, jwtIssuedAt: number) {
-    if (this.passwordChangedAt) {
-        const changedTimeStamp = this.passwordChangedAt.getTime() / 1000
-
-        return jwtIssuedAt < changedTimeStamp;
-    }
-
-    return false;
 }
 
 const User = mongoose.model("user", userSchema);
